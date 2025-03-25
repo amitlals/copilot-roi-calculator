@@ -1,0 +1,3173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MCopilot Agents ROI Calculator App (Unoffical BETA version)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/0.5.7/chartjs-plugin-annotation.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            /* M365 Modern Theme Colors */
+            --m365-black: #000000;
+            --m365-gray-10: #111111;
+            --m365-gray-20: #1f1f1f;
+            --m365-gray-30: #292929;
+            --m365-gray-40: #373737;
+            --m365-gray-50: #444444;
+            --m365-gray-60: #666666;
+            --m365-gray-70: #8a8886;
+            --m365-gray-80: #b3b0ad;
+            --m365-gray-90: #d2d0ce;
+            --m365-gray-100: #e1dfdd;
+            --m365-gray-110: #edebe9;
+            --m365-gray-120: #f3f2f1;
+            --m365-gray-130: #faf9f8;
+            --m365-primary: #0078d4;
+            --m365-primary-dark: #106ebe;
+            --m365-primary-light: #2b88d8;
+            --m365-blue: #4f6bed;
+            --m365-purple: #8764b8;
+            --m365-success: #107c10;
+            --m365-success-light: #28a745;
+            --m365-warning: #ff8c00;
+            --m365-error: #d83b01;
+            --m365-white: #ffffff;
+            
+            /* Spacing */
+            --space-xxs: 4px;
+            --space-xs: 8px;
+            --space-s: 12px;
+            --space-m: 16px;
+            --space-l: 20px;
+            --space-xl: 24px;
+            --space-xxl: 32px;
+            
+            /* Shadows */
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.15);
+            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.2);
+            --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.25);
+            
+            /* Transitions */
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.25s ease;
+            --transition-slow: 0.35s ease;
+            
+            /* Border Radius */
+            --radius-sm: 2px;
+            --radius-md: 4px;
+            --radius-lg: 8px;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+            background-color: var(--m365-gray-20);
+            color: var(--m365-gray-100);
+            line-height: 1.5;
+            font-size: 14px;
+            overflow: hidden;
+        }
+        
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--m365-gray-30);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--m365-gray-50);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--m365-gray-60);
+        }
+        
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 16px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            height: 32px;
+            outline: none;
+        }
+        
+        .btn-primary {
+            background-color: var(--m365-primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--m365-primary-dark);
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            color: var(--m365-primary);
+            border: 1px solid var(--m365-primary);
+        }
+        
+        .btn-outline:hover {
+            background-color: rgba(0, 120, 212, 0.1);
+        }
+        
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 12px;
+            height: 28px;
+        }
+        
+        .btn-icon {
+            padding: 6px;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+        }
+        
+        .btn-icon i {
+            font-size: 16px;
+        }
+        
+        /* App Container */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        
+        /* Header */
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-m) var(--space-xl);
+            background-color: var(--m365-gray-10);
+            border-bottom: 1px solid var(--m365-gray-40);
+            height: 60px;
+        }
+        
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-s);
+        }
+        
+        .header-logo img {
+            height: 28px;
+            width: auto;
+        }
+        
+        .header-logo h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--m365-gray-100);
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: var(--space-s);
+        }
+        
+        /* Main Layout */
+        .app-main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            background-color: var(--m365-gray-30);
+            border-right: 1px solid var(--m365-gray-40);
+            overflow-y: auto;
+            transition: width var(--transition-normal);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-toggle {
+            position: absolute;
+            top: 70px;
+            left: 320px;
+            transform: translateX(-50%);
+            z-index: 100;
+            width: 24px;
+            height: 24px;
+            background-color: var(--m365-gray-40);
+            border: 1px solid var(--m365-gray-50);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--m365-gray-100);
+            font-size: 10px;
+            transition: left var(--transition-normal);
+        }
+        
+        .sidebar.collapsed {
+            width: 0;
+        }
+        
+        .sidebar.collapsed + .sidebar-toggle {
+            left: 0;
+        }
+        
+        .sidebar-content {
+            padding: var(--space-m);
+            flex: 1;
+        }
+        
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--m365-gray-100);
+            margin-bottom: var(--space-xl);
+            padding-bottom: var(--space-s);
+            border-bottom: 1px solid var(--m365-gray-50);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .sidebar-title i {
+            cursor: pointer;
+            color: var(--m365-gray-80);
+            transition: color var(--transition-fast);
+        }
+        
+        .sidebar-title i:hover {
+            color: var(--m365-primary);
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: var(--space-xl);
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        /* Card Style */
+        .card {
+            background-color: var(--m365-gray-30);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: var(--space-xl);
+            overflow: hidden;
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .card-header {
+            padding: var(--space-m) var(--space-xl);
+            border-bottom: 1px solid var(--m365-gray-40);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--m365-gray-100);
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+        
+        .card-title i {
+            color: var(--m365-primary);
+        }
+        
+        .card-actions {
+            display: flex;
+            gap: var(--space-xs);
+        }
+        
+        .card-body {
+            padding: var(--space-xl);
+        }
+        
+        /* Tabs */
+        .view-tabs {
+            display: flex;
+            margin-bottom: var(--space-l);
+            border-bottom: 1px solid var(--m365-gray-40);
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        
+        .view-tabs::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .view-tab {
+            padding: var(--space-s) var(--space-l);
+            cursor: pointer;
+            font-weight: 500;
+            position: relative;
+            color: var(--m365-gray-80);
+            white-space: nowrap;
+            transition: color var(--transition-fast);
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+        
+        .view-tab:hover {
+            color: var(--m365-gray-100);
+        }
+        
+        .view-tab.active {
+            color: var(--m365-primary);
+        }
+        
+        .view-tab.active::after {
+            content: "";
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: var(--m365-primary);
+        }
+        
+        /* Form Elements */
+        .form-group {
+            margin-bottom: var(--space-l);
+        }
+        
+        .form-label {
+            display: flex;
+            align-items: center;
+            margin-bottom: var(--space-xs);
+            font-weight: 500;
+            color: var(--m365-gray-90);
+            gap: var(--space-xs);
+        }
+        
+        .form-label i {
+            color: var(--m365-gray-70);
+            font-size: 12px;
+            cursor: help;
+        }
+        
+        .form-control {
+            width: 100%;
+            background-color: var(--m365-gray-40);
+            border: 1px solid var(--m365-gray-50);
+            color: var(--m365-gray-100);
+            border-radius: var(--radius-sm);
+            padding: var(--space-xs) var(--space-s);
+            height: 32px;
+            font-family: 'Segoe UI', sans-serif;
+            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--m365-primary);
+            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.25);
+        }
+        
+        .input-group {
+            display: flex;
+            align-items: center;
+        }
+        
+        .input-group .form-control:first-child {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        
+        .input-group .input-group-append {
+            background-color: var(--m365-gray-40);
+            border: 1px solid var(--m365-gray-50);
+            border-left: none;
+            height: 32px;
+            padding: 0 var(--space-s);
+            display: flex;
+            align-items: center;
+            color: var(--m365-gray-80);
+            border-top-right-radius: var(--radius-sm);
+            border-bottom-right-radius: var(--radius-sm);
+        }
+        
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--m365-gray-40);
+            color: var(--m365-gray-100);
+            text-align: left;
+            border-radius: var(--radius-sm);
+            padding: var(--space-s);
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity var(--transition-fast);
+            box-shadow: var(--shadow-md);
+            font-weight: normal;
+            font-size: 12px;
+            line-height: 1.4;
+            border: 1px solid var(--m365-gray-50);
+        }
+        
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--m365-gray-50);
+            transition: var(--transition-fast);
+            border-radius: 20px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: var(--transition-fast);
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: var(--m365-primary);
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+        
+        /* Checkbox custom */
+        .checkbox-container {
+            display: flex;
+            margin-bottom: var(--space-m);
+        }
+        
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+        }
+        
+        .checkbox {
+            position: relative;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            appearance: none;
+            background-color: var(--m365-gray-40);
+            border: 1px solid var(--m365-gray-60);
+            border-radius: 2px;
+            margin-right: var(--space-xs);
+            transition: all var(--transition-fast);
+        }
+        
+        .checkbox:checked {
+            background-color: var(--m365-primary);
+            border-color: var(--m365-primary);
+        }
+        
+        .checkbox:checked::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 11px;
+        }
+        
+        .checkbox-content {
+            flex: 1;
+        }
+        
+        .checkbox-label {
+            font-weight: 500;
+            color: var(--m365-gray-100);
+        }
+        
+        .checkbox-details {
+            color: var(--m365-gray-80);
+            font-size: 12px;
+            margin-top: 2px;
+        }
+        
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1.4;
+            border-radius: 10px;
+            background-color: var(--m365-gray-40);
+            color: var(--m365-gray-100);
+        }
+        
+        .badge-primary {
+            background-color: rgba(0, 120, 212, 0.2);
+            color: var(--m365-primary-light);
+        }
+        
+        .badge-success {
+            background-color: rgba(16, 124, 16, 0.2);
+            color: var(--m365-success-light);
+        }
+        
+        .badge-warning {
+            background-color: rgba(255, 140, 0, 0.2);
+            color: var(--m365-warning);
+        }
+        
+        /* Section styling */
+        .section {
+            margin-bottom: var(--space-xl);
+        }
+        
+        .section-header {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: var(--space-m);
+            color: var(--m365-gray-100);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .section-divider {
+            height: 1px;
+            background-color: var(--m365-gray-40);
+            margin: var(--space-l) 0;
+        }
+        
+        /* License section */
+        .licenses-section {
+            margin-bottom: var(--space-l);
+            padding-bottom: var(--space-s);
+            border-bottom: 1px solid var(--m365-gray-40);
+        }
+        
+        /* Scenario Templates */
+        .scenario-templates {
+            margin-top: var(--space-l);
+        }
+        
+        .scenario-item {
+            padding: var(--space-s);
+            margin-bottom: var(--space-xs);
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            color: var(--m365-gray-100);
+            transition: background-color var(--transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .scenario-item:hover {
+            background-color: var(--m365-gray-40);
+        }
+        
+        .scenario-item.active {
+            background-color: rgba(0, 120, 212, 0.15);
+            color: var(--m365-primary-light);
+            border-left: 3px solid var(--m365-primary);
+            padding-left: calc(var(--space-s) - 3px);
+        }
+        
+        .scenario-icon {
+            margin-right: var(--space-xs);
+            color: var(--m365-gray-70);
+        }
+        
+        .scenario-item.active .scenario-icon {
+            color: var(--m365-primary);
+        }
+        
+        .scenario-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity var(--transition-fast);
+        }
+        
+        .scenario-item:hover .scenario-actions {
+            opacity: 1;
+        }
+        
+        .scenario-action {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 10px;
+            color: var(--m365-gray-80);
+            transition: all var(--transition-fast);
+        }
+        
+        .scenario-action:hover {
+            background-color: var(--m365-gray-50);
+            color: var(--m365-gray-100);
+        }
+        
+        /* View Content */
+        .view-content {
+            display: none;
+        }
+        
+        .view-content.active {
+            display: block;
+        }
+        
+        /* Time Savings View */
+        .time-savings-header {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: var(--space-m);
+            color: var(--m365-gray-100);
+        }
+        
+        .time-saved-total {
+            margin-bottom: var(--space-l);
+            font-size: 16px;
+            color: var(--m365-gray-80);
+        }
+        
+        .time-saved-value {
+            color: var(--m365-primary);
+            font-weight: 600;
+        }
+        
+        /* Metric Cards */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-m);
+            margin-bottom: var(--space-xl);
+        }
+        
+        .metric-card {
+            background-color: var(--m365-gray-40);
+            border-radius: var(--radius-sm);
+            padding: var(--space-m);
+            display: flex;
+            flex-direction: column;
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .metric-card.highlighted {
+            background-color: rgba(0, 120, 212, 0.15);
+            border-left: 3px solid var(--m365-primary);
+        }
+        
+        .metric-title {
+            font-size: 14px;
+            color: var(--m365-gray-80);
+            margin-bottom: var(--space-xs);
+            font-weight: 500;
+        }
+        
+        .metric-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--m365-gray-100);
+            margin-bottom: var(--space-xs);
+        }
+        
+        .metric-card.highlighted .metric-value {
+            color: var(--m365-primary);
+        }
+        
+        .metric-subtitle {
+            font-size: 12px;
+            color: var(--m365-gray-70);
+        }
+        
+        .metric-change {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: var(--space-xxs);
+        }
+        
+        .metric-change.positive {
+            color: var(--m365-success-light);
+        }
+        
+        .metric-change.negative {
+            color: var(--m365-error);
+        }
+        
+        /* Data Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: var(--space-xl);
+            border: 1px solid var(--m365-gray-40);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+        }
+        
+        .data-table th {
+            text-align: left;
+            padding: var(--space-s) var(--space-m);
+            background-color: var(--m365-gray-30);
+            border-bottom: 2px solid var(--m365-gray-50);
+            color: var(--m365-gray-90);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .data-table td {
+            padding: var(--space-s) var(--space-m);
+            border-bottom: 1px solid var(--m365-gray-40);
+            color: var(--m365-gray-100);
+        }
+        
+        .data-table tbody tr:hover {
+            background-color: var(--m365-gray-40);
+        }
+        
+        .data-table tfoot {
+            background-color: var(--m365-gray-30);
+        }
+        
+        .data-table tfoot td {
+            border-top: 2px solid var(--m365-gray-50);
+        }
+        
+        .data-table .active-scenario {
+            background-color: rgba(0, 120, 212, 0.1);
+            border-left: 3px solid var(--m365-primary);
+        }
+        
+        .time-value {
+            color: var(--m365-primary);
+            font-weight: 500;
+        }
+        
+        .money-value {
+            color: var(--m365-success-light);
+            font-weight: 500;
+        }
+        
+        /* Alert Component */
+        .alert {
+            padding: var(--space-m);
+            border-radius: var(--radius-sm);
+            margin-bottom: var(--space-l);
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-s);
+        }
+        
+        .alert i {
+            font-size: 16px;
+            margin-top: 2px;
+        }
+        
+        .alert-info {
+            background-color: rgba(0, 120, 212, 0.1);
+            border-left: 3px solid var(--m365-primary);
+            color: var(--m365-gray-100);
+        }
+        
+        .alert-success {
+            background-color: rgba(16, 124, 16, 0.1);
+            border-left: 3px solid var(--m365-success);
+            color: var(--m365-gray-100);
+        }
+        
+        .alert-warning {
+            background-color: rgba(255, 140, 0, 0.1);
+            border-left: 3px solid var(--m365-warning);
+            color: var(--m365-gray-100);
+        }
+        
+        .alert-danger {
+            background-color: rgba(216, 59, 1, 0.1);
+            border-left: 3px solid var(--m365-error);
+            color: var(--m365-gray-100);
+        }
+        
+        /* Comparison Controls */
+        .comparison-controls {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: var(--space-m);
+        }
+        
+        .comparison-selector {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+        
+        .comparison-selector label {
+            color: var(--m365-gray-90);
+            font-weight: 500;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            overflow: auto;
+            animation: fadeIn 0.3s;
+        }
+        
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal-content {
+            background-color: var(--m365-gray-30);
+            margin: auto;
+            width: 90%;
+            max-width: 600px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            animation: slideIn 0.3s;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .modal-header {
+            padding: var(--space-m) var(--space-xl);
+            border-bottom: 1px solid var(--m365-gray-40);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--m365-gray-100);
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+        
+        .modal-header h2 i {
+            color: var(--m365-primary);
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--m365-gray-80);
+            cursor: pointer;
+            line-height: 1;
+        }
+        
+        .modal-body {
+            padding: var(--space-xl);
+            overflow-y: auto;
+        }
+        
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--space-s);
+            margin-top: var(--space-l);
+        }
+        
+        /* Disclaimer Styling */
+        .disclaimer-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--m365-error);
+            margin-bottom: var(--space-m);
+            text-align: center;
+        }
+        
+        .disclaimer-lead {
+            font-size: 16px;
+            margin-bottom: var(--space-l);
+            color: var(--m365-gray-100);
+            line-height: 1.6;
+        }
+        
+        .disclaimer-section {
+            margin-bottom: var(--space-l);
+        }
+        
+        .disclaimer-section h4 {
+            color: var(--m365-primary);
+            margin-bottom: var(--space-xs);
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .disclaimer-section p {
+            margin-bottom: var(--space-s);
+            color: var(--m365-gray-90);
+            line-height: 1.5;
+        }
+        
+        .disclaimer-section ul {
+            list-style-type: disc;
+            margin-left: var(--space-xl);
+            color: var(--m365-gray-90);
+        }
+        
+        .disclaimer-section li {
+            margin-bottom: var(--space-xs);
+        }
+        
+        .disclaimer-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: var(--space-xl);
+        }
+        
+        /* Custom Checkbox for Disclaimer */
+        .checkbox-custom {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            background-color: var(--m365-gray-40);
+            border: 1px solid var(--m365-gray-60);
+            border-radius: 2px;
+            position: relative;
+            margin-right: var(--space-xs);
+            vertical-align: middle;
+        }
+        
+        input[type="checkbox"]:checked ~ .checkbox-custom::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 11px;
+        }
+        
+        input[type="checkbox"]:checked ~ .checkbox-custom {
+            background-color: var(--m365-primary);
+            border-color: var(--m365-primary);
+        }
+        
+        /* Footer */
+        .footer {
+            margin-top: var(--space-xxl);
+            padding-top: var(--space-l);
+            border-top: 1px solid var(--m365-gray-40);
+            color: var(--m365-gray-70);
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .footer a {
+            color: var(--m365-primary);
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 280px;
+            }
+            
+            .sidebar-toggle {
+                left: 280px;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .app-main {
+                flex-direction: column;
+                overflow-y: auto;
+            }
+            
+            .sidebar {
+                width: 100%;
+                order: 2;
+                border-right: none;
+                border-top: 1px solid var(--m365-gray-40);
+            }
+            
+            .sidebar-toggle {
+                display: none;
+            }
+            
+            .main-content {
+                order: 1;
+            }
+            
+            .app-header {
+                flex-direction: column;
+                height: auto;
+                gap: var(--space-s);
+                padding: var(--space-s);
+            }
+            
+            .header-logo h1 {
+                font-size: 16px;
+            }
+            
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: var(--space-s);
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .data-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- App Header -->
+        <header class="app-header">
+            <div class="header-logo">
+                <i class="fas fa-calculator" style="color: var(--m365-primary); font-size: 24px;"></i>
+                <h1>Microsoft M365 Copilot Agents ROI Calculator App (Unoffical BETA version)  </h1>
+            </div>
+            <div class="header-actions">
+                <button id="export-pdf" class="btn btn-outline btn-sm" title="Export as PDF">
+                    <i class="fas fa-file-pdf"></i> Export PDF
+                </button>
+                <button id="save-scenario" class="btn btn-outline btn-sm" title="Save Current Scenario">
+                    <i class="fas fa-save"></i> Save
+                </button>
+                <button id="settings-btn" class="btn btn-outline btn-sm" title="Settings">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <button id="help-btn" class="btn btn-outline btn-sm" title="Help">
+                    <i class="fas fa-question-circle"></i>
+                </button>
+            </div>
+        </header>
+        
+        <!-- Main Content Area -->
+        <div class="app-main">
+            <!-- Sidebar with inputs -->
+            <div class="sidebar">
+                <div id="sidebar-toggle" class="sidebar-toggle" title="Toggle Sidebar">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+                <div class="sidebar-content">
+                    <h2 class="sidebar-title">
+                        Input Parameters
+                        <i class="fas fa-sync-alt" id="reset-params" title="Reset to Defaults"></i>
+                    </h2>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            Employee Cost (Annual Salary $)
+                            <div class="tooltip">
+                                <i class="fas fa-info-circle"></i>
+                                <span class="tooltip-text">Average annual salary cost per employee including benefits.</span>
+                            </div>
+                        </label>
+                        <div class="input-group">
+                            <input type="number" id="employeeCost" class="form-control" value="100000" onchange="calculate()">
+                            <div class="input-group-append">USD</div>
+                        </div>
+                    </div>
+                    
+                    <div class="licenses-section">
+                        <h2 class="section-header">
+                            <span>License Configuration</span>
+                            <span class="badge badge-primary" id="license-cost-badge">$30/user</span>
+                        </h2>
+                        
+                        <div class="checkbox-container">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="m365Copilot" class="checkbox" checked onchange="calculate()">
+                            </div>
+                            <div class="checkbox-content">
+                                <label for="m365Copilot" class="checkbox-label">Microsoft 365 Copilot</label>
+                                <div class="checkbox-details">($30/user/mo) - AI assistant for Microsoft 365 apps</div>
+                            </div>
+                        </div>
+                        
+                        <div class="checkbox-container">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="copilotStudio" class="checkbox" checked onchange="calculate()">
+                            </div>
+                            <div class="checkbox-content">
+                                <label for="copilotStudio" class="checkbox-label">Copilot Studio</label>
+                                <div class="checkbox-details">($200/tenant/mo) - Create and manage custom copilots</div>
+                            </div>
+                        </div>
+                        
+                        <div class="checkbox-container">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="payAsYouGo" class="checkbox" onchange="togglePayAsYouGo(); calculate()">
+                            </div>
+                            <div class="checkbox-content">
+                                <label for="payAsYouGo" class="checkbox-label">Copilot Studio Pay-as-You-Go</label>
+                                <div class="checkbox-details">($0.008/message) - Flexible, low-commitment usage</div>
+                            </div>
+                        </div>
+                        
+                        <div id="payAsYouGoOptions" class="form-group" style="margin-left: 24px; display: none;">
+                            <label class="form-label">
+                                Estimated Messages per Month:
+                                <div class="tooltip">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span class="tooltip-text">Estimate how many messages will be processed by your Copilot each month.</span>
+                                </div>
+                            </label>
+                            <input type="number" id="messageVolume" class="form-control" value="10000" min="0" onchange="calculate()">
+                        </div>
+                        
+                        <div class="form-group" style="margin-left: 24px;">
+                            <label class="form-label">
+                                Additional 25k message packs:
+                                <div class="tooltip">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span class="tooltip-text">Additional message packs for Copilot Studio ($200/pack/mo).</span>
+                                </div>
+                            </label>
+                            <input type="number" id="msgPacks" class="form-control" value="2" min="0" onchange="calculate()">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            Number of Users
+                            <div class="tooltip">
+                                <i class="fas fa-info-circle"></i>
+                                <span class="tooltip-text">Total number of employees who will be using Copilot.</span>
+                            </div>
+                        </label>
+                        <input type="number" id="userCount" class="form-control" value="200" onchange="calculate()">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            Time Savings per User per Day
+                            <div class="tooltip">
+                                <i class="fas fa-info-circle"></i>
+                                <span class="tooltip-text">Estimated time saved per user through Copilot's assistance.</span>
+                            </div>
+                        </label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="number" id="timeSavings" class="form-control" value="15" onchange="calculate()">
+                            <select id="timeUnit" class="form-control" style="width: 100px;" onchange="calculate()">
+                                <option value="minutes">minutes</option>
+                                <option value="hours">hours</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            Redirected Effort Value ($/hr)
+                            <div class="tooltip">
+                                <i class="fas fa-info-circle"></i>
+                                <span class="tooltip-text">The value of each hour saved when redirected to more productive tasks.</span>
+                            </div>
+                        </label>
+                        <div class="input-group">
+                            <input type="number" id="redirectedValue" class="form-control" value="60" onchange="calculate()">
+                            <div class="input-group-append">USD</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            Calculation Period
+                            <div class="tooltip">
+                                <i class="fas fa-info-circle"></i>
+                                <span class="tooltip-text">Time period for ROI calculation.</span>
+                            </div>
+                        </label>
+                        <select id="duration" class="form-control" onchange="calculate()">
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="annual" selected>Annual</option>
+                            <option value="3year">3 Years</option>
+                        </select>
+                    </div>
+                    
+                    <div class="section-divider"></div>
+                    
+                    <div class="scenario-templates">
+                        <h2 class="section-header">
+                            <span>Your Scenario Templates</span>
+                            <button id="add-scenario" class="btn btn-sm btn-outline" title="Add New Scenario">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </h2>
+                        
+                        <div class="scenario-item" onclick="loadScenario('customer')">
+                            <div>
+                                <i class="fas fa-headset scenario-icon"></i>
+                                Customer Service (10 Reps)
+                            </div>
+                            <div class="scenario-actions">
+                                <div class="scenario-action" title="Edit"><i class="fas fa-pen"></i></div>
+                                <div class="scenario-action" title="Delete"><i class="fas fa-trash"></i></div>
+                            </div>
+                        </div>
+                        
+                        <div class="scenario-item" onclick="loadScenario('sales')">
+                            <div>
+                                <i class="fas fa-chart-line scenario-icon"></i>
+                                Sales Organization (50 users)
+                            </div>
+                            <div class="scenario-actions">
+                                <div class="scenario-action" title="Edit"><i class="fas fa-pen"></i></div>
+                                <div class="scenario-action" title="Delete"><i class="fas fa-trash"></i></div>
+                            </div>
+                        </div>
+                        
+                        <div class="scenario-item" onclick="loadScenario('it')">
+                            <div>
+                                <i class="fas fa-laptop-code scenario-icon"></i>
+                                IT Department (200 users)
+                            </div>
+                            <div class="scenario-actions">
+                                <div class="scenario-action" title="Edit"><i class="fas fa-pen"></i></div>
+                                <div class="scenario-action" title="Delete"><i class="fas fa-trash"></i></div>
+                            </div>
+                        </div>
+                        
+                        <div class="scenario-item" onclick="loadScenario('marketing')">
+                            <div>
+                                <i class="fas fa-bullhorn scenario-icon"></i>
+                                Marketing Team (30 users)
+                            </div>
+                            <div class="scenario-actions">
+                                <div class="scenario-action" title="Edit"><i class="fas fa-pen"></i></div>
+                                <div class="scenario-action" title="Delete"><i class="fas fa-trash"></i></div>
+                            </div>
+                        </div>
+                        
+                        <div class="scenario-item" onclick="loadScenario('finance')">
+                            <div>
+                                <i class="fas fa-money-bill-wave scenario-icon"></i>
+                                Finance Dept. (20 users)
+                            </div>
+                            <div class="scenario-actions">
+                                <div class="scenario-action" title="Edit"><i class="fas fa-pen"></i></div>
+                                <div class="scenario-action" title="Delete"><i class="fas fa-trash"></i></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Add the Small Business scenario to the UI list -->
+                        <div class="scenario-item" onclick="loadScenario('smallbiz')">
+                            <div>
+                                <i class="fas fa-store scenario-icon"></i>
+                                Small Business (Pay-as-You-Go)
+                            </div>
+                            <div class="scenario-actions">
+                                <div class="scenario-action" title="Edit"><i class="fas fa-pen"></i></div>
+                                <div class="scenario-action" title="Delete"><i class="fas fa-trash"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main content area -->
+            <div class="main-content">
+                <!-- Tabs for different views -->
+                <div class="view-tabs">
+                    <div class="view-tab active" data-view="savings">
+                        <i class="fas fa-dollar-sign"></i> Savings Overview
+                    </div>
+                    <div class="view-tab" data-view="time">
+                        <i class="fas fa-clock"></i> Time Savings
+                    </div>
+                    <div class="view-tab" data-view="breakeven">
+                        <i class="fas fa-balance-scale"></i> Breakeven Analysis
+                    </div>
+                    <div class="view-tab" data-view="comparison">
+                        <i class="fas fa-chart-bar"></i> Scenario Comparison
+                    </div>
+                    <div class="view-tab" data-view="sensitivity">
+                        <i class="fas fa-sliders-h"></i> Sensitivity Analysis
+                    </div>
+                </div>
+                
+                <!-- Savings View -->
+                <div id="savingsView" class="view-content active">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-dollar-sign"></i> Financial Impact
+                            </h2>
+                            <div class="card-actions">
+                                <button class="btn btn-sm btn-outline" id="toggle-chart-view">
+                                    <i class="fas fa-chart-pie"></i> Toggle View
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="metrics-grid">
+                                <div class="metric-card">
+                                    <div class="metric-title">Total Investment</div>
+                                    <div class="metric-value" id="annualCost">$79,200</div>
+                                    <div class="metric-change negative">
+                                        <i class="fas fa-arrow-down"></i> Cash outflow
+                                    </div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-title">Total Savings</div>
+                                    <div class="metric-value" id="annualSavings">$690,000</div>
+                                    <div class="metric-change positive">
+                                        <i class="fas fa-arrow-up"></i> Projected
+                                    </div>
+                                </div>
+                                <div class="metric-card highlighted">
+                                    <div class="metric-title">Return on Investment</div>
+                                    <div class="metric-value" id="roiValue">771.2%</div>
+                                    <div class="metric-change positive">
+                                        <i class="fas fa-check-circle"></i> Very strong ROI
+                                    </div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-title">Net Value</div>
+                                    <div class="metric-value" id="netValue">$610,800</div>
+                                    <div class="metric-change positive">
+                                        <i class="fas fa-arrow-up"></i> Positive return
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="chart-container">
+                                <canvas id="savingsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-list"></i> Detailed Cost Breakdown
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <table class="data-table" id="costBreakdownTable">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Monthly Cost</th>
+                                        <th>Annual Cost</th>
+                                        <th>% of Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Microsoft 365 Copilot Licenses</td>
+                                        <td>$6,000</td>
+                                        <td>$72,000</td>
+                                        <td>90.9%</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Copilot Studio Base</td>
+                                        <td>$200</td>
+                                        <td>$2,400</td>
+                                        <td>3.0%</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Additional Message Packs</td>
+                                        <td>$400</td>
+                                        <td>$4,800</td>
+                                        <td>6.1%</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td><strong>Total</strong></td>
+                                        <td><strong>$6,600</strong></td>
+                                        <td><strong>$79,200</strong></td>
+                                        <td><strong>100%</strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Time View -->
+                <div id="timeView" class="view-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-clock"></i> Time Productivity Impact
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="metrics-grid">
+                                <div class="metric-card">
+                                    <div class="metric-title">Users</div>
+                                    <div class="metric-value" id="userCountDisplay">200</div>
+                                    <div class="metric-subtitle">Total employees</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-title">Daily Time Saved</div>
+                                    <div class="metric-value" id="teamTotalDay">50.0 hr</div>
+                                    <div class="metric-subtitle">Across organization</div>
+                                </div>
+                                <div class="metric-card highlighted">
+                                    <div class="metric-title">Annual Time Saved</div>
+                                    <div class="metric-value" id="totalTimeSaved">11,500 hr</div>
+                                    <div class="metric-subtitle">≈ 5.5 full-time employees</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-title">Per User Annually</div>
+                                    <div class="metric-value" id="perUserYear">57.5 hr</div>
+                                    <div class="metric-subtitle">Individual productivity gain</div>
+                                </div>
+                            </div>
+                            
+                            <div class="chart-container">
+                                <canvas id="timeChart"></canvas>
+                            </div>
+                            
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Time Period</th>
+                                        <th>Per User Saved</th>
+                                        <th>Team Total Saved</th>
+                                        <th>Value of Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Per Day</td>
+                                        <td id="perUserDay" class="time-value">0.3 hr</td>
+                                        <td id="teamTotalDay2" class="time-value">50.0 hr</td>
+                                        <td id="valueTotalDay" class="money-value">$3,000</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Per Week</td>
+                                        <td id="perUserWeek" class="time-value">1.3 hr</td>
+                                        <td id="teamTotalWeek" class="time-value">250.0 hr</td>
+                                        <td id="valueTotalWeek" class="money-value">$15,000</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Per Month</td>
+                                        <td id="perUserMonth" class="time-value">5.3 hr</td>
+                                        <td id="teamTotalMonth" class="time-value">1,050.0 hr</td>
+                                        <td id="valueTotalMonth" class="money-value">$63,000</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Per Year</td>
+                                        <td id="perUserYear2" class="time-value">57.5 hr</td>
+                                        <td id="teamTotalYear" class="time-value">11,500.0 hr</td>
+                                        <td id="valueTotalYear" class="money-value">$690,000</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Breakeven View -->
+                <div id="breakevenView" class="view-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-balance-scale"></i> Breakeven Analysis
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="metrics-grid">
+                                <div class="metric-card">
+                                    <div class="metric-title">Monthly Investment</div>
+                                    <div class="metric-value" id="monthlyCost">$6,600</div>
+                                    <div class="metric-subtitle">License costs</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-title">Daily Savings</div>
+                                    <div class="metric-value" id="dailySavings">$3,000</div>
+                                    <div class="metric-subtitle">Based on time saved</div>
+                                </div>
+                                <div class="metric-card highlighted">
+                                    <div class="metric-title">Breakeven Point</div>
+                                    <div class="metric-value" id="breakevenTime">42 days</div>
+                                    <div class="metric-subtitle">To recover investment</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-title">Days Per Month</div>
+                                    <div class="metric-value">21</div>
+                                    <div class="metric-subtitle">Working days assumed</div>
+                                </div>
+                            </div>
+                            
+                            <div class="chart-container">
+                                <canvas id="breakevenChart"></canvas>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i>
+                                <div>
+                                    <strong>Breakeven Analysis:</strong> This chart shows when the cumulative savings from Copilot usage will exceed the investment costs. The breakeven point of <span id="breakevenDays">42</span> days means you'll start seeing positive returns after less than <span id="breakevenMonths">2</span> months.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Comparison View -->
+                <div id="comparisonView" class="view-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-chart-bar"></i> Scenario Comparison
+                            </h2>
+                            <div class="card-actions">
+                                <button class="btn btn-sm btn-outline" id="add-comparison">
+                                    <i class="fas fa-plus"></i> Add Scenario
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="comparison-controls">
+                                <div class="comparison-selector">
+                                    <label>Compare:</label>
+                                    <select id="comparison-metric">
+                                        <option value="roi">ROI (%)</option>
+                                        <option value="savings">Total Savings ($)</option>
+                                        <option value="cost">Total Cost ($)</option>
+                                        <option value="breakeven">Breakeven Time (days)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="chart-container">
+                                <canvas id="comparisonChart"></canvas>
+                            </div>
+                            
+                            <table class="data-table" id="comparisonTable">
+                                <thead>
+                                    <tr>
+                                        <th>Scenario</th>
+                                        <th>Users</th>
+                                        <th>Investment</th>
+                                        <th>Savings</th>
+                                        <th>ROI</th>
+                                        <th>Breakeven</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="active-scenario">
+                                        <td>IT Department (Current)</td>
+                                        <td>200</td>
+                                        <td>$79,200</td>
+                                        <td>$690,000</td>
+                                        <td>771.2%</td>
+                                        <td>42 days</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Customer Service</td>
+                                        <td>10</td>
+                                        <td>$4,000</td>
+                                        <td>$25,000</td>
+                                        <td>525.0%</td>
+                                        <td>58 days</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Sales Organization</td>
+                                        <td>50</td>
+                                        <td>$20,000</td>
+                                        <td>$205,000</td>
+                                        <td>925.0%</td>
+                                        <td>35 days</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sensitivity Analysis View -->
+                <div id="sensitivityView" class="view-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-sliders-h"></i> Sensitivity Analysis
+                            </h2>
+                            <div class="card-actions">
+                                <select id="sensitivity-param">
+                                    <option value="timeSavings">Time Savings</option>
+                                    <option value="userCount">User Count</option>
+                                    <option value="redirectedValue">Redirected Value</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="sensitivityChart"></canvas>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i>
+                                <div>
+                                    <strong>What-If Analysis:</strong> This chart shows how the ROI changes when adjusting a single parameter. Use this to understand which factors have the biggest impact on your potential returns.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div class="footer">
+                    <div>Developed by Amit Lal | <a href="https://aka.ms/amitlal" target="_blank">aka.ms/amitlal</a></div>
+                    <div>© 2025 Microsoft M365 Copilot Agents ROI Calculator App (Unoffical beta version)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal for disclaimer -->
+    <div id="disclaimerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-shield-alt"></i>M365 Copilot Agents ROI Calculator App by Amit Lal</h2>
+                <button class="modal-close" id="close-disclaimer">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="disclaimer-title">IMPORTANT DISCLAIMER NOTICE</div>
+                
+                <p class="disclaimer-lead">
+                    This calculator provides estimates based on your inputs and general industry assumptions. The results are for informational purposes only and should not be considered as financial advice.
+                </p>
+                
+                <div class="disclaimer-section">
+                    <h4>DISCLAIMER OF WARRANTIES:</h4>
+                    <p>THE RESULTS AND INFORMATION PROVIDED BY THIS CALCULATOR ARE PROVIDED "AS IS," WITH NO WARRANTIES. MICROSOFT AND THE CREATOR OF THIS TOOL EXPRESSLY DISCLAIM ALL WARRANTIES, EXPRESS, IMPLIED OR STATUTORY.</p>
+                </div>
+                
+                <div class="disclaimer-section">
+                    <h4>NOT FINANCIAL ADVICE:</h4>
+                    <p>This calculator is designed to help visualize potential outcomes based on the input data. It is not a substitute for professional financial analysis. Organizations should conduct their own comprehensive assessment with appropriate financial and technical advisors before making investment decisions.</p>
+                </div>
+                
+                <div class="disclaimer-section">
+                    <h4>ASSUMPTIONS AND LIMITATIONS:</h4>
+                    <ul>
+                        <li>The calculator uses simplistic models that may not account for all variables affecting your specific situation</li>
+                        <li>Time savings estimates are based on general productivity research and may vary in your environment and scenarios</li>
+                        <li>The calculator does not account for implementation, training, or change management costs</li>
+                        <li>Results assume full adoption and proficient usage of the technology</li>
+                    </ul>
+                </div>
+                
+                <div class="disclaimer-section">
+                    <h4>DATA PRIVACY NOTICE:</h4>
+                    <p>This calculator runs entirely in your browser. No data is collected, stored, or transmitted to external servers. Your inputs and results remain private to your session. - Thank you, Amit Lal</p>
+                </div>
+                
+                <div class="disclaimer-actions">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="dont-show-again">
+                        <span class="checkbox-custom"></span>
+                        <span class="checkbox-label">Don't show this disclaimer again!</span>
+                    </label>
+                    <button id="accept-disclaimer" class="btn btn-primary">I Understand & Accept</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal for saving scenarios -->
+    <div id="saveScenarioModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-save"></i> Save Current Scenario</h2>
+                <button class="modal-close" id="close-save-scenario">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Scenario Name</label>
+                    <input type="text" id="scenarioName" class="form-control" placeholder="E.g., Engineering Team 50 Users">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Icon</label>
+                    <select id="scenarioIcon" class="form-control">
+                        <option value="laptop-code">IT/Engineering</option>
+                        <option value="headset">Customer Service</option>
+                        <option value="chart-line">Sales</option>
+                        <option value="bullhorn">Marketing</option>
+                        <option value="money-bill-wave">Finance</option>
+                        <option value="users">HR</option>
+                        <option value="building">Corporate</option>
+                        <option value="briefcase">Business</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Notes (optional)</label>
+                    <textarea id="scenarioNotes" class="form-control" rows="3" placeholder="Add any notes about this scenario..."></textarea>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        Scenarios are saved in your browser's local storage and will be available when you return.
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button id="cancel-save" class="btn btn-outline">Cancel</button>
+                    <button id="confirm-save" class="btn btn-primary">Save Scenario</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // DOM elements
+        const tabs = document.querySelectorAll('.view-tab');
+        const views = document.querySelectorAll('.view-content');
+        const disclaimerModal = document.getElementById('disclaimerModal');
+        const saveScenarioModal = document.getElementById('saveScenarioModal');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebar = document.querySelector('.sidebar');
+        
+        // Initialize chart instances
+        let savingsChart;
+        let breakevenChart;
+        let timeChart;
+        let comparisonChart;
+        let sensitivityChart;
+        
+        // Tab switching
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const view = this.getAttribute('data-view');
+                
+                // Update active tab
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Update active view
+                views.forEach(v => v.classList.remove('active'));
+                document.getElementById(view + 'View').classList.add('active');
+                
+                // Redraw charts if needed
+                if (view === 'comparison' && !comparisonChart) {
+                    initComparisonChart();
+                } else if (view === 'sensitivity' && !sensitivityChart) {
+                    initSensitivityChart();
+                }
+            });
+        });
+        
+        // Sidebar toggle
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                
+                // Change icon direction
+                const icon = this.querySelector('i');
+                if (sidebar.classList.contains('collapsed')) {
+                    icon.classList.remove('fa-chevron-left');
+                    icon.classList.add('fa-chevron-right');
+                } else {
+                    icon.classList.remove('fa-chevron-right');
+                    icon.classList.add('fa-chevron-left');
+                }
+            });
+        }
+        
+        // Modal Management
+        function openModal(modal) {
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeModal(modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // Setup modal event listeners
+        document.getElementById('close-disclaimer')?.addEventListener('click', () => closeModal(disclaimerModal));
+        document.getElementById('accept-disclaimer')?.addEventListener('click', () => {
+            const dontShowAgain = document.getElementById('dont-show-again').checked;
+            if (dontShowAgain) {
+                localStorage.setItem('disclaimerAccepted', 'true');
+            }
+            closeModal(disclaimerModal);
+        });
+        
+        document.getElementById('save-scenario')?.addEventListener('click', () => openModal(saveScenarioModal));
+        document.getElementById('close-save-scenario')?.addEventListener('click', () => closeModal(saveScenarioModal));
+        document.getElementById('cancel-save')?.addEventListener('click', () => closeModal(saveScenarioModal));
+        
+        // Export PDF functionality
+        document.getElementById('export-pdf')?.addEventListener('click', exportPDF);
+        
+        function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Add title
+            doc.setFontSize(18);
+            doc.text('Microsoft Copilot ROI Analysis', 20, 20);
+            
+            // Add date
+            doc.setFontSize(10);
+            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 30);
+            
+            // Add parameters section
+            doc.setFontSize(14);
+            doc.text('Input Parameters', 20, 40);
+            
+            doc.setFontSize(10);
+            doc.text(`Users: ${document.getElementById('userCount').value}`, 25, 50);
+            doc.text(`Time Savings: ${document.getElementById('timeSavings').value} ${document.getElementById('timeUnit').value}/day`, 25, 55);
+            doc.text(`Employee Cost: $${document.getElementById('employeeCost').value}/year`, 25, 60);
+            doc.text(`Value of Redirected Time: $${document.getElementById('redirectedValue').value}/hour`, 25, 65);
+            
+            // Add results section
+            doc.setFontSize(14);
+            doc.text('Results Summary', 20, 80);
+            
+            doc.setFontSize(10);
+            doc.text(`Total Investment: ${document.getElementById('annualCost').textContent}`, 25, 90);
+            doc.text(`Total Savings: ${document.getElementById('annualSavings').textContent}`, 25, 95);
+            doc.text(`ROI: ${document.getElementById('roiValue').textContent}`, 25, 100);
+            doc.text(`Breakeven Point: ${document.getElementById('breakevenTime').textContent}`, 25, 105);
+            doc.text(`Annual Time Saved: ${document.getElementById('totalTimeSaved').textContent}`, 25, 110);
+            
+            // Capture and add charts
+            html2canvas(document.querySelector('.chart-container')).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                doc.addPage();
+                doc.text('ROI Chart', 20, 20);
+                doc.addImage(imgData, 'PNG', 15, 30, 180, 100);
+                
+                // Save the PDF
+                doc.save('Copilot_ROI_Analysis.pdf');
+            });
+        }
+        
+        // Scenario templates
+        const scenarios = {
+            customer: {
+                employeeCost: 60000,
+                m365Copilot: true,
+                copilotStudio: true,
+                payAsYouGo: false,
+                messageVolume: 0,
+                msgPacks: 0,
+                userCount: 10,
+                timeSavings: 20,
+                timeUnit: 'minutes',
+                redirectedValue: 40,
+                duration: 'annual'
+            },
+            sales: {
+                employeeCost: 85000,
+                m365Copilot: true,
+                copilotStudio: true,
+                payAsYouGo: false,
+                messageVolume: 0,
+                msgPacks: 1,
+                userCount: 50,
+                timeSavings: 25,
+                timeUnit: 'minutes',
+                redirectedValue: 55,
+                duration: 'annual'
+            },
+            it: {
+                employeeCost: 100000,
+                m365Copilot: true,
+                copilotStudio: true,
+                payAsYouGo: false,
+                messageVolume: 0,
+                msgPacks: 2,
+                userCount: 200,
+                timeSavings: 15,
+                timeUnit: 'minutes',
+                redirectedValue: 60,
+                duration: 'annual'
+            },
+            marketing: {
+                employeeCost: 75000,
+                m365Copilot: true,
+                copilotStudio: true,
+                payAsYouGo: false,
+                messageVolume: 0,
+                msgPacks: 1,
+                userCount: 30,
+                timeSavings: 30,
+                timeUnit: 'minutes',
+                redirectedValue: 50,
+                duration: 'annual'
+            },
+            finance: {
+                employeeCost: 90000,
+                m365Copilot: true,
+                copilotStudio: true,
+                payAsYouGo: false,
+                messageVolume: 0,
+                msgPacks: 0,
+                userCount: 20,
+                timeSavings: 20,
+                timeUnit: 'minutes',
+                redirectedValue: 65,
+                duration: 'annual'
+            },
+            smallbiz: {
+                employeeCost: 65000,
+                m365Copilot: true,
+                copilotStudio: false,
+                payAsYouGo: true,
+                messageVolume: 5000,
+                msgPacks: 0,
+                userCount: 5,
+                timeSavings: 25,
+                timeUnit: 'minutes',
+                redirectedValue: 45,
+                duration: 'annual'
+            }
+        };
+        
+        // Load scenario
+        function loadScenario(scenarioName) {
+            const scenario = scenarios[scenarioName];
+            
+            // Clear active states on scenario items
+            document.querySelectorAll('.scenario-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Set active state on selected scenario
+            event.target.closest('.scenario-item').classList.add('active');
+            
+            // Set form values
+            document.getElementById('employeeCost').value = scenario.employeeCost;
+            document.getElementById('m365Copilot').checked = scenario.m365Copilot;
+            document.getElementById('copilotStudio').checked = scenario.copilotStudio;
+            document.getElementById('payAsYouGo').checked = scenario.payAsYouGo;
+            document.getElementById('messageVolume').value = scenario.messageVolume;
+            document.getElementById('msgPacks').value = scenario.msgPacks;
+            document.getElementById('userCount').value = scenario.userCount;
+            document.getElementById('timeSavings').value = scenario.timeSavings;
+            document.getElementById('timeUnit').value = scenario.timeUnit;
+            document.getElementById('redirectedValue').value = scenario.redirectedValue;
+            document.getElementById('duration').value = scenario.duration;
+            
+            // Toggle Pay-as-You-Go options visibility
+            togglePayAsYouGo();
+            
+            // Recalculate
+            calculate();
+        }
+        
+        // Format currency
+        function formatCurrency(value) {
+            return '$' + value.toLocaleString(undefined, {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
+        }
+        
+        // Format number with commas
+        function formatNumber(value) {
+            return value.toLocaleString(undefined, {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 1
+            });
+        }
+        
+        // Calculate results
+        function calculate() {
+            // Get input values
+            const employeeCost = parseFloat(document.getElementById('employeeCost').value) || 0;
+            const m365CopilotEnabled = document.getElementById('m365Copilot').checked;
+            const copilotStudioEnabled = document.getElementById('copilotStudio').checked;
+            const payAsYouGoEnabled = document.getElementById('payAsYouGo').checked;
+            const msgPacks = parseInt(document.getElementById('msgPacks').value) || 0;
+            const messageVolume = parseInt(document.getElementById('messageVolume').value) || 0;
+            const userCount = parseInt(document.getElementById('userCount').value) || 0;
+            const timeSavings = parseFloat(document.getElementById('timeSavings').value) || 0;
+            const timeUnit = document.getElementById('timeUnit').value;
+            const redirectedValue = parseFloat(document.getElementById('redirectedValue').value) || 0;
+            const duration = document.getElementById('duration').value;
+            
+            // Calculate hourly rate
+            const hourlyRate = employeeCost / 2080; // 2080 = 40 hours * 52 weeks
+            
+            // Convert time savings to hours
+            let timeSavingsHours = timeUnit === 'minutes' ? timeSavings / 60 : timeSavings;
+            
+            // Calculate time saved per day, week, month, year
+            const timeSavedPerUserPerDay = timeSavingsHours;
+            const timeSavedPerUserPerWeek = timeSavedPerUserPerDay * 5; // 5 working days per week
+            const timeSavedPerUserPerMonth = timeSavedPerUserPerDay * 21; // 21 working days per month
+            const timeSavedPerUserPerYear = timeSavedPerUserPerMonth * 12;
+            
+            // Calculate total time saved
+            const timeSavedTeamPerDay = timeSavedPerUserPerDay * userCount;
+            const timeSavedTeamPerWeek = timeSavedPerUserPerWeek * userCount;
+            const timeSavedTeamPerMonth = timeSavedPerUserPerMonth * userCount;
+            const timeSavedTeamPerYear = timeSavedPerUserPerYear * userCount;
+            
+            // Calculate license costs
+            const m365CopilotCostPerMonth = m365CopilotEnabled ? 30 * userCount : 0;
+            const copilotStudioBaseCost = copilotStudioEnabled ? 200 : 0;
+            const copilotStudioAdditionalCost = copilotStudioEnabled ? msgPacks * 200 : 0;
+            const payAsYouGoCost = payAsYouGoEnabled ? messageVolume * 0.008 : 0;
+            const copilotStudioCostPerMonth = copilotStudioBaseCost + copilotStudioAdditionalCost;
+            const totalCostPerMonth = m365CopilotCostPerMonth + copilotStudioCostPerMonth + payAsYouGoCost;
+            
+            // Calculate duration-based costs
+            let durationMultiplier = 1;
+            let durationLabel = 'month';
+            if (duration === 'quarterly') {
+                durationMultiplier = 3;
+                durationLabel = 'quarter';
+            } else if (duration === 'annual') {
+                durationMultiplier = 12;
+                durationLabel = 'year';
+            } else if (duration === '3year') {
+                durationMultiplier = 36;
+                durationLabel = '3 years';
+            }
+            
+            const totalCost = totalCostPerMonth * durationMultiplier;
+            
+            // Calculate value of time savings
+            const valueSavedPerDay = (timeSavedTeamPerDay * hourlyRate) + (timeSavedTeamPerDay * redirectedValue);
+            const valueSavedPerWeek = (timeSavedTeamPerWeek * hourlyRate) + (timeSavedTeamPerWeek * redirectedValue);
+            const valueSavedPerMonth = (timeSavedTeamPerMonth * hourlyRate) + (timeSavedTeamPerMonth * redirectedValue);
+            const valueSavedPerYear = (timeSavedTeamPerYear * hourlyRate) + (timeSavedTeamPerYear * redirectedValue);
+            
+            // Calculate total savings for selected duration
+            const totalSavings = (timeSavedTeamPerMonth * hourlyRate + timeSavedTeamPerMonth * redirectedValue) * durationMultiplier;
+            
+            // Calculate ROI
+            const roi = totalCost > 0 ? ((totalSavings - totalCost) / totalCost) * 100 : 0;
+            const netValue = totalSavings - totalCost;
+            
+            // Calculate breakeven
+            const dailySavings = valueSavedPerDay;
+            const breakevenDays = dailySavings > 0 ? Math.ceil(totalCostPerMonth / dailySavings) : 0;
+            const breakevenMonths = Math.ceil(breakevenDays / 21);
+            
+            // Update cost breakdown table
+            updateCostBreakdownTable(m365CopilotCostPerMonth, copilotStudioBaseCost, copilotStudioAdditionalCost, payAsYouGoCost, totalCostPerMonth, durationMultiplier);
+            
+            // Update user count displays
+            document.getElementById('userCountDisplay').textContent = userCount.toLocaleString();
+            
+            // Update time saving displays
+            document.getElementById('perUserDay').textContent = timeSavedPerUserPerDay.toFixed(1) + ' hr';
+            document.getElementById('perUserWeek').textContent = timeSavedPerUserPerWeek.toFixed(1) + ' hr';
+            document.getElementById('perUserMonth').textContent = timeSavedPerUserPerMonth.toFixed(1) + ' hr';
+            document.getElementById('perUserYear').textContent = timeSavedPerUserPerYear.toFixed(1) + ' hr';
+            document.getElementById('perUserYear2').textContent = timeSavedPerUserPerYear.toFixed(1) + ' hr';
+            
+            document.getElementById('teamTotalDay').textContent = formatNumber(timeSavedTeamPerDay) + ' hr';
+            document.getElementById('teamTotalDay2').textContent = formatNumber(timeSavedTeamPerDay) + ' hr';
+            document.getElementById('teamTotalWeek').textContent = formatNumber(timeSavedTeamPerWeek) + ' hr';
+            document.getElementById('teamTotalMonth').textContent = formatNumber(timeSavedTeamPerMonth) + ' hr';
+            document.getElementById('teamTotalYear').textContent = formatNumber(timeSavedTeamPerYear) + ' hr';
+            
+            document.getElementById('totalTimeSaved').textContent = formatNumber(timeSavedTeamPerYear) + ' hr';
+            
+            // Update values displays
+            document.getElementById('valueTotalDay').textContent = formatCurrency(valueSavedPerDay);
+            document.getElementById('valueTotalWeek').textContent = formatCurrency(valueSavedPerWeek);
+            document.getElementById('valueTotalMonth').textContent = formatCurrency(valueSavedPerMonth);
+            document.getElementById('valueTotalYear').textContent = formatCurrency(valueSavedPerYear);
+            
+            // Update savings displays
+            document.getElementById('monthlyCost').textContent = formatCurrency(totalCostPerMonth);
+            document.getElementById('annualCost').textContent = formatCurrency(totalCost);
+            document.getElementById('annualSavings').textContent = formatCurrency(totalSavings);
+            document.getElementById('netValue').textContent = formatCurrency(netValue);
+            document.getElementById('roiValue').textContent = roi.toFixed(1) + '%';
+            document.getElementById('dailySavings').textContent = formatCurrency(valueSavedPerDay);
+            
+            // Update breakeven display
+            document.getElementById('breakevenTime').textContent = breakevenDays + ' days';
+            document.getElementById('breakevenDays').textContent = breakevenDays;
+            document.getElementById('breakevenMonths').textContent = breakevenMonths;
+            
+            // Update license cost badge
+            document.getElementById('license-cost-badge').textContent = `$${m365CopilotEnabled ? '30' : '0'}/user`;
+            
+            // Update charts
+            updateSavingsChart(totalCost, totalSavings, netValue, durationLabel);
+            updateBreakevenChart(totalCostPerMonth, dailySavings, breakevenDays);
+            updateTimeChart(timeSavedPerUserPerYear, timeSavedTeamPerYear);
+            
+            // Update sensitivity analysis chart if visible
+            if (document.getElementById('sensitivityView').classList.contains('active')) {
+                updateSensitivityChart();
+            }
+            
+            // Update comparison table entry for current scenario
+            updateComparisonTable(userCount, totalCost, totalSavings, roi, breakevenDays);
+        }
+        
+        // Update cost breakdown table
+        function updateCostBreakdownTable(m365Cost, studioBaseCost, studioAdditionalCost, payAsYouGoCost, totalMonth, multiplier) {
+            const table = document.getElementById('costBreakdownTable');
+            if (!table) return;
+            
+            const tbody = table.querySelector('tbody');
+            const tfoot = table.querySelector('tfoot');
+            
+            // Clear existing rows
+            tbody.innerHTML = '';
+            
+            // Add M365 Copilot row if enabled
+            if (m365Cost > 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>Microsoft 365 Copilot Licenses</td>
+                    <td>${formatCurrency(m365Cost)}</td>
+                    <td>${formatCurrency(m365Cost * multiplier)}</td>
+                    <td>${((m365Cost / totalMonth) * 100).toFixed(1)}%</td>
+                `;
+                tbody.appendChild(row);
+            }
+            
+            // Add Copilot Studio Base row if enabled
+            if (studioBaseCost > 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>Copilot Studio Base</td>
+                    <td>${formatCurrency(studioBaseCost)}</td>
+                    <td>${formatCurrency(studioBaseCost * multiplier)}</td>
+                    <td>${((studioBaseCost / totalMonth) * 100).toFixed(1)}%</td>
+                `;
+                tbody.appendChild(row);
+            }
+            
+            // Add Message Packs row if enabled
+            if (studioAdditionalCost > 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>Additional Message Packs</td>
+                    <td>${formatCurrency(studioAdditionalCost)}</td>
+                    <td>${formatCurrency(studioAdditionalCost * multiplier)}</td>
+                    <td>${((studioAdditionalCost / totalMonth) * 100).toFixed(1)}%</td>
+                `;
+                tbody.appendChild(row);
+            }
+            
+            // Add Pay-as-You-Go row if enabled
+            if (payAsYouGoCost > 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>Pay-as-You-Go Messages</td>
+                    <td>${formatCurrency(payAsYouGoCost)}</td>
+                    <td>${formatCurrency(payAsYouGoCost * multiplier)}</td>
+                    <td>${((payAsYouGoCost / totalMonth) * 100).toFixed(1)}%</td>
+                `;
+                tbody.appendChild(row);
+            }
+            
+            // Update footer
+            tfoot.innerHTML = `
+                <tr>
+                    <td><strong>Total</strong></td>
+                    <td><strong>${formatCurrency(totalMonth)}</strong></td>
+                    <td><strong>${formatCurrency(totalMonth * multiplier)}</strong></td>
+                    <td><strong>100%</strong></td>
+                </tr>
+            `;
+        }
+        
+        // Update savings chart
+        function updateSavingsChart(cost, savings, netValue, durationLabel) {
+            const ctx = document.getElementById('savingsChart').getContext('2d');
+            
+            if (savingsChart) {
+                savingsChart.destroy();
+            }
+            
+            // Set Chart.js global options for dark theme
+            Chart.defaults.global.defaultFontColor = '#e1dfdd';
+            
+            savingsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Investment', 'Savings', 'Net Value'],
+                    datasets: [{
+                        data: [cost, savings, netValue],
+                        backgroundColor: [
+                            '#4f6bed',
+                            '#28a745',
+                            '#0078d4'
+                        ],
+                        borderColor: [
+                            '#4f6bed',
+                            '#28a745',
+                            '#0078d4'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: `Financial Impact per ${durationLabel}`,
+                        fontSize: 16,
+                        padding: 20
+                    },
+                    tooltips: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return formatCurrency(tooltipItem.yLabel);
+                            }
+                        }
+                    },
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero: true,
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                }
+                            },
+                            gridLines: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }],
+                        xAxes: [{
+                            gridLines: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }]
+                    }
+                }
+            });
+        }
+        
+        // Update time chart
+        function updateTimeChart(perUserTime, totalTime) {
+            const ctx = document.getElementById('timeChart')?.getContext('2d');
+            if (!ctx) return;
+            
+            if (timeChart) {
+                timeChart.destroy();
+            }
+            
+            timeChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Time Saved Annually'],
+                    datasets: [{
+                        data: [totalTime],
+                        backgroundColor: [
+                            '#0078d4',
+                        ],
+                        borderColor: [
+                            '#0078d4',
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutoutPercentage: 70,
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Annual Time Saved (hours)',
+                        fontSize: 16,
+                        padding: 20
+                    },
+                    tooltips: {
+                        callbacks: {
+                            label: function(tooltipItem, data) {
+                                return formatNumber(data.datasets[0].data[tooltipItem.index]) + ' hours';
+                            }
+                        }
+                    },
+                    elements: {
+                        center: {
+                            text: formatNumber(totalTime) + ' hours',
+                            color: '#e1dfdd',
+                            fontStyle: 'Segoe UI',
+                            sidePadding: 20,
+                            minFontSize: 20,
+                            lineHeight: 25
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Update breakeven chart
+        function updateBreakevenChart(monthlyCost, dailySavings, breakevenDays) {
+            const ctx = document.getElementById('breakevenChart').getContext('2d');
+            
+            if (breakevenChart) {
+                breakevenChart.destroy();
+            }
+            
+            // Generate data for 60 days (or max breakeven + 10 days)
+            const days = Math.max(60, breakevenDays + 10);
+            const labels = [];
+            const costData = [];
+            const savingsData = [];
+            
+            for (let i = 1; i <= days; i++) {
+                labels.push('Day ' + i);
+                costData.push(monthlyCost);
+                savingsData.push(dailySavings * i);
+            }
+            
+            breakevenChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Monthly Investment',
+                            data: costData,
+                            borderColor: '#d83b01',
+                            backgroundColor: 'rgba(216, 59, 1, 0.1)',
+                            borderWidth: 2,
+                            fill: true
+                        },
+                        {
+                            label: 'Cumulative Savings',
+                            data: savingsData,
+                            borderColor: '#28a745',
+                            backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                            borderWidth: 2,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    title: {
+                        display: true,
+                        text: 'Breakeven Analysis (Days)',
+                        fontSize: 16,
+                        padding: 20
+                    },
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(tooltipItem, data) {
+                                return data.datasets[tooltipItem.datasetIndex].label + ': ' + 
+                                       formatCurrency(tooltipItem.yLabel);
+                            }
+                        }
+                    },
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                }
+                            },
+                            gridLines: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }],
+                        xAxes: [{
+                            gridLines: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                autoSkip: true,
+                                maxTicksLimit: 10
+                            }
+                        }]
+                    },
+                    annotation: {
+                        annotations: [{
+                            type: 'line',
+                            mode: 'vertical',
+                            scaleID: 'x-axis-0',
+                            value: breakevenDays - 1,
+                            borderColor: 'rgba(255, 255, 255, 0.5)',
+                            borderWidth: 2,
+                            label: {
+                                content: 'Breakeven',
+                                enabled: true,
+                                position: 'top',
+                                backgroundColor: 'rgba(40, 167, 69, 0.8)'
+                            }
+                        }]
+                    }
+                }
+            });
+        }
+        
+        // Initialize on page load
+        window.onload = function() {
+            // Show disclaimer on initial load
+            showDisclaimer();
+            
+            // Initialize calculations
+            calculate();
+            
+            // Set default scenario (IT team 200 users)
+            document.querySelectorAll('.scenario-item')[2].classList.add('active');
+        };
+        
+        // Show disclaimer
+        function showDisclaimer() {
+            // Create modal overlay
+            const overlay = document.createElement('div');
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+            overlay.style.display = 'flex';
+            overlay.style.justifyContent = 'center';
+            overlay.style.alignItems = 'center';
+            overlay.style.zIndex = '1000';
+            
+            // Create modal content
+            const modal = document.createElement('div');
+            modal.style.backgroundColor = 'var(--m365-gray-30)';
+            modal.style.borderRadius = '4px';
+            modal.style.padding = '24px';
+            modal.style.maxWidth = '600px';
+            modal.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+            
+            // Modal header
+            const header = document.createElement('h2');
+            header.textContent = 'Welcome to the AI Investment Navigator!';
+            header.style.color = 'var(--m365-primary)';
+            header.style.marginBottom = '16px';
+            header.style.fontSize = '22px';
+            header.style.fontWeight = '600';
+            
+            // Modal content
+            const content = document.createElement('p');
+            content.innerHTML = `
+            <div style="margin-bottom: 20px;">
+                <strong style="font-size: 16px; color: var(--m365-primary);">IMPORTANT NOTICE:</strong> This calculator is a thought-provoking tool created by someone who enjoys visualizing AI investments, not a financial crystal ball. While I've built this using solid mathematical principles, please remember:
+            </div>
+            
+            <ol style="margin-left: 20px; margin-bottom: 20px;">
+                <li style="margin-bottom: 8px;">The numbers presented are estimates based on the inputs you provide</li>
+                <li style="margin-bottom: 8px;">Every organization's AI journey is unique, with variables this calculator can't possibly account for</li>
+                <li style="margin-bottom: 8px;">I'm a technology enthusiast with a passion for ROI visualization, not a certified financial advisor</li>
+            </ol>
+            
+            <div style="margin-bottom: 20px;">
+                You can customize all variables by clicking the settings icon in the top right corner. Play around with different scenarios to see how small changes can dramatically impact your potential returns!
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                I hope this tool sparks meaningful conversations about AI investments in your organization.
+            </div>
+            
+            <div style="margin-bottom: 8px;">
+                Happy calculating!
+            </div>
+            
+            <div style="margin-bottom: 16px; font-weight: 600;">
+                Amit Lal 👨‍💻
+            </div>
+            
+            <div style="font-style: italic; color: var(--m365-gray-80);">
+                P.S. No actual financial advisors were harmed in the making of this calculator, but several spreadsheets were pushed to their limits.
+            </div>`;
+            content.style.color = 'var(--m365-gray-90)';
+            content.style.lineHeight = '1.6';
+            content.style.marginBottom = '20px';
+            
+            // Close button
+            const closeButton = document.createElement('button');
+            closeButton.textContent = 'Get Started';
+            closeButton.style.backgroundColor = 'var(--m365-primary)';
+            closeButton.style.color = 'white';
+            closeButton.style.border = 'none';
+            closeButton.style.padding = '8px 16px';
+            closeButton.style.borderRadius = '2px';
+            closeButton.style.cursor = 'pointer';
+            closeButton.style.fontWeight = '600';
+            closeButton.onclick = function() {
+                document.body.removeChild(overlay);
+            };
+            
+            // Append elements
+            modal.appendChild(header);
+            modal.appendChild(content);
+            modal.appendChild(closeButton);
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+        }
+        
+        // Initialize comparison chart
+        function initComparisonChart() {
+            const comparisonMetric = document.getElementById('comparison-metric').value;
+            updateComparisonChart(comparisonMetric);
+            
+            // Add change listener to update chart when metric changes
+            document.getElementById('comparison-metric').addEventListener('change', function() {
+                updateComparisonChart(this.value);
+            });
+        }
+        
+        // Update comparison chart
+        function updateComparisonChart(metric) {
+            const ctx = document.getElementById('comparisonChart').getContext('2d');
+            
+            if (comparisonChart) {
+                comparisonChart.destroy();
+            }
+            
+            // Get data from comparison table
+            const table = document.getElementById('comparisonTable');
+            const rows = table.querySelectorAll('tbody tr');
+            
+            const labels = [];
+            const data = [];
+            const colors = [];
+            
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                labels.push(cells[0].textContent);
+                
+                let value;
+                switch (metric) {
+                    case 'roi':
+                        value = parseFloat(cells[4].textContent.replace('%', ''));
+                        break;
+                    case 'savings':
+                        value = parseFloat(cells[3].textContent.replace(/[$,]/g, ''));
+                        break;
+                    case 'cost':
+                        value = parseFloat(cells[2].textContent.replace(/[$,]/g, ''));
+                        break;
+                    case 'breakeven':
+                        value = parseInt(cells[5].textContent.replace(' days', ''));
+                        break;
+                }
+                
+                data.push(value);
+                
+                // Set current scenario as highlighted
+                if (row.classList.contains('active-scenario')) {
+                    colors.push('#0078d4');
+                } else {
+                    colors.push('#8764b8');
+                }
+            });
+            
+            // Format labels based on metric
+            let title, formatter;
+            switch (metric) {
+                case 'roi':
+                    title = 'ROI Comparison (%)';
+                    formatter = (value) => value.toFixed(1) + '%';
+                    break;
+                case 'savings':
+                    title = 'Total Savings Comparison ($)';
+                    formatter = (value) => formatCurrency(value);
+                    break;
+                case 'cost':
+                    title = 'Total Cost Comparison ($)';
+                    formatter = (value) => formatCurrency(value);
+                    break;
+                case 'breakeven':
+                    title = 'Breakeven Time Comparison (days)';
+                    formatter = (value) => value + ' days';
+                    break;
+            }
+            
+            comparisonChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors,
+                        borderColor: colors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: title,
+                        fontSize: 16,
+                        padding: 20
+                    },
+                    tooltips: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return formatter(tooltipItem.yLabel);
+                            }
+                        }
+                    },
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero: true,
+                                callback: function(value) {
+                                    return formatter(value);
+                                }
+                            },
+                            gridLines: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }],
+                        xAxes: [{
+                            gridLines: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }]
+                    }
+                }
+            });
+        }
+        
+        // Initialize sensitivity chart
+        function initSensitivityChart() {
+            updateSensitivityChart();
+            
+            // Add change listener to update chart when parameter changes
+            document.getElementById('sensitivity-param').addEventListener('change', updateSensitivityChart);
+        }
+        
+        // Update sensitivity chart
+        function updateSensitivityChart() {
+            const ctx = document.getElementById('sensitivityChart').getContext('2d');
+            
+            if (sensitivityChart) {
+                sensitivityChart.destroy();
+            }
+            
+            const param = document.getElementById('sensitivity-param').value;
+            
+            // Get base values
+            const baseEmployeeCost = parseFloat(document.getElementById('employeeCost').value);
+            const baseUserCount = parseInt(document.getElementById('userCount').value);
+            const baseTimeSavings = parseFloat(document.getElementById('timeSavings').value);
+            const baseTimeUnit = document.getElementById('timeUnit').value;
+            const baseRedirectedValue = parseFloat(document.getElementById('redirectedValue').value);
+            
+            // Generate data points
+            const data = [];
+            const labels = [];
+            
+            // Define ranges for each parameter
+            let range, baseValue, paramLabel;
+            switch (param) {
+                case 'timeSavings':
+                    baseValue = baseTimeSavings;
+                    range = [-50, -25, -10, 0, 10, 25, 50, 100];
+                    paramLabel = 'Time Savings';
+                    break;
+                case 'userCount':
+                    baseValue = baseUserCount;
+                    range = [-75, -50, -25, -10, 0, 10, 25, 50, 75, 100];
+                    paramLabel = 'User Count';
+                    break;
+                case 'redirectedValue':
+                    baseValue = baseRedirectedValue;
+                    range = [-50, -25, -10, 0, 10, 25, 50, 100];
+                    paramLabel = 'Redirected Value';
+                    break;
+            }
+            
+            // Calculate ROI for each point in the range
+            range.forEach(percent => {
+                let newValue = baseValue * (1 + percent / 100);
+                if (newValue <= 0) return; // Skip non-positive values
+                
+                // Create a copy of current inputs
+                const inputs = {
+                    employeeCost: baseEmployeeCost,
+                    userCount: baseUserCount,
+                    timeSavings: baseTimeSavings,
+                    timeUnit: baseTimeUnit,
+                    redirectedValue: baseRedirectedValue
+                };
+                
+                // Modify the selected parameter
+                inputs[param] = newValue;
+                
+                // Calculate ROI with the modified input
+                const roi = calculateROI(inputs);
+                
+                // Add to chart data
+                labels.push(percent > 0 ? `+${percent}%` : `${percent}%`);
+                data.push(roi);
+            });
+            
+            sensitivityChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'ROI (%)',
+                        data: data,
+                        borderColor: '#0078d4',
+                        backgroundColor: 'rgba(0, 120, 212, 0.1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#0078d4',
+                        pointRadius: 4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    title: {
+                        display: true,
+                        text: `Sensitivity Analysis: Impact of ${paramLabel} Changes on ROI`,
+                        fontSize: 16,
+                        padding: 20
+                    },
+                    tooltips: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return 'ROI: ' + tooltipItem.yLabel.toFixed(1) + '%';
+                            }
+                        }
+                    },
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toFixed(1) + '%';
+                                }
+                            },
+                            gridLines: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Return on Investment (%)'
+                            }
+                        }],
+                        xAxes: [{
+                            gridLines: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            scaleLabel: {
+                                display: true,
+                                labelString: `${paramLabel} Change (%)`
+                            }
+                        }]
+                    }
+                }
+            });
+        }
+        
+        // Calculate ROI for sensitivity analysis
+        function calculateROI(inputs) {
+            // Extract inputs
+            const employeeCost = inputs.employeeCost;
+            const userCount = inputs.userCount;
+            const timeSavings = inputs.timeSavings;
+            const timeUnit = inputs.timeUnit;
+            const redirectedValue = inputs.redirectedValue;
+            
+            // Calculate hourly rate
+            const hourlyRate = employeeCost / 2080;
+            
+            // Convert time savings to hours
+            let timeSavingsHours = timeUnit === 'minutes' ? timeSavings / 60 : timeSavings;
+            
+            // Calculate time saved per month
+            const timeSavedPerUserPerDay = timeSavingsHours;
+            const timeSavedPerUserPerMonth = timeSavedPerUserPerDay * 21;
+            const timeSavedTeamPerMonth = timeSavedPerUserPerMonth * userCount;
+            
+            // Calculate license costs (assuming current selections)
+            const m365CopilotEnabled = document.getElementById('m365Copilot').checked;
+            const copilotStudioEnabled = document.getElementById('copilotStudio').checked;
+            const msgPacks = parseInt(document.getElementById('msgPacks').value) || 0;
+            
+            const m365CopilotCostPerMonth = m365CopilotEnabled ? 30 * userCount : 0;
+            const copilotStudioBaseCost = copilotStudioEnabled ? 200 : 0;
+            const copilotStudioAdditionalCost = copilotStudioEnabled ? msgPacks * 200 : 0;
+            const copilotStudioCostPerMonth = copilotStudioBaseCost + copilotStudioAdditionalCost;
+            const totalCostPerMonth = m365CopilotCostPerMonth + copilotStudioCostPerMonth;
+            
+            // Calculate savings for a year
+            const savingsPerMonth = (timeSavedTeamPerMonth * hourlyRate) + (timeSavedTeamPerMonth * redirectedValue);
+            const totalSavings = savingsPerMonth * 12;
+            const totalCost = totalCostPerMonth * 12;
+            
+            // Calculate ROI
+            return totalCost > 0 ? ((totalSavings - totalCost) / totalCost) * 100 : 0;
+        }
+        
+        // Update comparison table with current scenario
+        function updateComparisonTable(userCount, cost, savings, roi, breakeven) {
+            const table = document.getElementById('comparisonTable');
+            if (!table) return;
+            
+            // Get the active scenario row
+            const row = table.querySelector('tbody tr.active-scenario');
+            if (row) {
+                const cells = row.querySelectorAll('td');
+                cells[1].textContent = userCount;
+                cells[2].textContent = formatCurrency(cost);
+                cells[3].textContent = formatCurrency(savings);
+                cells[4].textContent = roi.toFixed(1) + '%';
+                cells[5].textContent = breakeven + ' days';
+            }
+        }
+        
+        // Initialize on page load
+        window.onload = function() {
+            // Show disclaimer on initial load (if not previously accepted)
+            if (!localStorage.getItem('disclaimerAccepted')) {
+                openModal(disclaimerModal);
+            }
+            
+            // Initialize calculations
+            calculate();
+            
+            // Set default scenario (IT team 200 users)
+            document.querySelectorAll('.scenario-item')[2].classList.add('active');
+            
+            // Add reset parameters handler
+            document.getElementById('reset-params')?.addEventListener('click', function() {
+                loadScenario('it');
+            });
+            
+            // Add toggle chart view handler
+            document.getElementById('toggle-chart-view')?.addEventListener('click', function() {
+                const chart = document.getElementById('savingsChart');
+                const currentType = savingsChart.config.type;
+                
+                savingsChart.destroy();
+                
+                const newType = currentType === 'bar' ? 'doughnut' : 'bar';
+                const ctx = chart.getContext('2d');
+                
+                const cost = parseFloat(document.getElementById('annualCost').textContent.replace(/[$,]/g, ''));
+                const savings = parseFloat(document.getElementById('annualSavings').textContent.replace(/[$,]/g, ''));
+                const netValue = parseFloat(document.getElementById('netValue').textContent.replace(/[$,]/g, ''));
+                
+                if (newType === 'bar') {
+                    updateSavingsChart(cost, savings, netValue, 'year');
+                } else {
+                    savingsChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Investment', 'Net Value'],
+                            datasets: [{
+                                data: [cost, netValue],
+                                backgroundColor: [
+                                    '#4f6bed',
+                                    '#28a745'
+                                ],
+                                borderColor: [
+                                    '#4f6bed',
+                                    '#28a745'
+                                ],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            title: {
+                                display: true,
+                                text: 'Investment vs. Net Value',
+                                fontSize: 16,
+                                padding: 20
+                            },
+                            tooltips: {
+                                callbacks: {
+                                    label: function(tooltipItem, data) {
+                                        const value = data.datasets[0].data[tooltipItem.index];
+                                        const label = data.labels[tooltipItem.index];
+                                        return label + ': ' + formatCurrency(value);
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+            
+            // Add save scenario handler
+            document.getElementById('confirm-save')?.addEventListener('click', function() {
+                const name = document.getElementById('scenarioName').value;
+                const icon = document.getElementById('scenarioIcon').value;
+                const notes = document.getElementById('scenarioNotes').value;
+                
+                if (!name) {
+                    alert('Please enter a scenario name');
+                    return;
+                }
+                
+                // Get current values
+                const scenario = {
+                    employeeCost: parseFloat(document.getElementById('employeeCost').value),
+                    m365Copilot: document.getElementById('m365Copilot').checked,
+                    copilotStudio: document.getElementById('copilotStudio').checked,
+                    msgPacks: parseInt(document.getElementById('msgPacks').value),
+                    userCount: parseInt(document.getElementById('userCount').value),
+                    timeSavings: parseFloat(document.getElementById('timeSavings').value),
+                    timeUnit: document.getElementById('timeUnit').value,
+                    redirectedValue: parseFloat(document.getElementById('redirectedValue').value),
+                    duration: document.getElementById('duration').value,
+                    icon: icon,
+                    notes: notes
+                };
+                
+                // Save to localStorage
+                const savedScenarios = JSON.parse(localStorage.getItem('savedScenarios') || '{}');
+                savedScenarios[name] = scenario;
+                localStorage.setItem('savedScenarios', JSON.stringify(savedScenarios));
+                
+                // Add to UI
+                addScenarioToUI(name, scenario);
+                
+                // Close modal
+                closeModal(saveScenarioModal);
+            });
+            
+            // Load saved scenarios from localStorage
+            loadSavedScenarios();
+        };
+        
+        // Add a saved scenario to the UI
+        function addScenarioToUI(name, scenario) {
+            const templatesList = document.querySelector('.scenario-templates');
+            if (!templatesList) return;
+            
+            // Create new scenario item
+            const item = document.createElement('div');
+            item.className = 'scenario-item';
+            item.onclick = function() {
+                loadSavedScenario(name);
+            };
+            
+            item.innerHTML = `
+                <div>
+                    <i class="fas fa-${scenario.icon || 'users'} scenario-icon"></i>
+                    ${name}
+                </div>
+                <div class="scenario-actions">
+                    <div class="scenario-action" title="Edit"><i class="fas fa-pen"></i></div>
+                    <div class="scenario-action" title="Delete"><i class="fas fa-trash"></i></div>
+                </div>
+            `;
+            
+            // Add delete functionality
+            item.querySelector('.scenario-action[title="Delete"]').onclick = function(e) {
+                e.stopPropagation();
+                if (confirm(`Are you sure you want to delete the scenario "${name}"?`)) {
+                    // Remove from localStorage
+                    const savedScenarios = JSON.parse(localStorage.getItem('savedScenarios') || '{}');
+                    delete savedScenarios[name];
+                    localStorage.setItem('savedScenarios', JSON.stringify(savedScenarios));
+                    
+                    // Remove from UI
+                    item.remove();
+                }
+            };
+            
+            // Add to list
+            templatesList.appendChild(item);
+        }
+        
+        // Load a saved scenario
+        function loadSavedScenario(name) {
+            const savedScenarios = JSON.parse(localStorage.getItem('savedScenarios') || '{}');
+            const scenario = savedScenarios[name];
+            
+            if (!scenario) return;
+            
+            // Set form values
+            document.getElementById('employeeCost').value = scenario.employeeCost;
+            document.getElementById('m365Copilot').checked = scenario.m365Copilot;
+            document.getElementById('copilotStudio').checked = scenario.copilotStudio;
+            document.getElementById('payAsYouGo').checked = scenario.payAsYouGo || false;
+            document.getElementById('messageVolume').value = scenario.messageVolume || 0;
+            document.getElementById('msgPacks').value = scenario.msgPacks;
+            document.getElementById('userCount').value = scenario.userCount;
+            document.getElementById('timeSavings').value = scenario.timeSavings;
+            document.getElementById('timeUnit').value = scenario.timeUnit;
+            document.getElementById('redirectedValue').value = scenario.redirectedValue;
+            document.getElementById('duration').value = scenario.duration;
+            
+            // Toggle Pay-as-You-Go options visibility
+            togglePayAsYouGo();
+            
+            // Mark as active
+            document.querySelectorAll('.scenario-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.textContent.trim().includes(name)) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // Recalculate
+            calculate();
+        }
+        
+        // Load saved scenarios from localStorage
+        function loadSavedScenarios() {
+            const savedScenarios = JSON.parse(localStorage.getItem('savedScenarios') || '{}');
+            
+            // Add each saved scenario to the UI
+            for (const name in savedScenarios) {
+                addScenarioToUI(name, savedScenarios[name]);
+            }
+        }
+        
+        // Add the toggle function for Pay-as-You-Go options
+        function togglePayAsYouGo() {
+            const payAsYouGoEnabled = document.getElementById('payAsYouGo').checked;
+            const payAsYouGoOptions = document.getElementById('payAsYouGoOptions');
+            
+            if (payAsYouGoEnabled) {
+                payAsYouGoOptions.style.display = 'block';
+            } else {
+                payAsYouGoOptions.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
